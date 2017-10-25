@@ -1,10 +1,6 @@
-;******************************************************************************
-; A BUNCH OF SHIT
-
 	INCLUDE	"includes/Hardware.inc"
 	INCLUDE	"includes/Addsub1.inc"
 
-; Costants for setting copying loops
 rINPUTS			EQU		$C000
 rSELPOS2		EQU		$C001
 rSELPOS1		EQU		$C002
@@ -80,7 +76,7 @@ START::
 	ld		sp,$FFFE				; set the stack to $FFFE
 
 	call	WAITERINO
-	call	WAITERINO				; I want to see nintendo's logo :))))))
+	call	WAITERINO				; I want to see nintendo's logo
 	call	WAITERINO
 
 	xor		a
@@ -161,10 +157,10 @@ L1:
 	ldh		[rLCDC],a
 
 	call	WAIT_VBLANK
-	ld		hl,STRINGS
+	ld		hl,INTRODUCTION
 	call	print_fst_line
 	call	WAIT_VBLANK
-	ld		hl,STRINGS+$11
+	ld		hl,INTRODUCTION+$11
 	call	print_snd_line
 	call	WAIT_VBLANK
 	call	print_arrow
@@ -187,13 +183,202 @@ HALT_PLS:
 	call	rem_text
 
 	call	WAIT_VBLANK
+	ld		a,%00000001
+	ldh		[rLCDC],a				; turn off LCD
+	call	LOAD_NAME_SELECTION
+	ld		a,%10001001
+	ldh		[rLCDC],a
+
+NAME_LOOP:
+	ld		a,%00010000				;
+	ldh		[rIE], a				; Joypad interrupt only
+	ld		a,$2F				;
+	ld		[rP1],a				; Set 0 at the output line P15 (Up/Down/Left/Right)
+	xor		a
+	ld		[rINPUTS],a
+	ld		a,$E0					;
+	ldh		[rIF], a				; disable all IF
+	ei
+	halt
+	nop
+	ld		a,[rSELPOS1]
+	ld		e,a
+	ld		a,[rSELPOS2]
+	ld		d,a
+	call	WAIT_VBLANK
+	call	rem_arrow
+	sub16ir	de,$00A1
+	ld		a,d
+	sub		$9C
+	ld		d,a
+	ld		a,[rINPUTS]
+;	Start	|	Select	|	B	|	A	|	Down	|	Up	|	Sx	|	Dx	|
+	and		$0F
+	cp		$08
+	jp		z,down
+	cp		$04
+	jp		z,up
+	cp		$02
+	jp		z,sx
+	cp		$01
+	jp		z,dx
+	and		$03
+	cp		$02
+	jp		z,sx
+	jp		dx
+	ld		a,[rINPUTS]
+	and		$0C
+	cp		$08
+	jp		z,down
+	jp		up
+
+down:
+	ld		a,d
+	or		$00
+	jp		nz,special_down
+	add16ir	de,$40
+	jp		end
+special_down:
+	ld		a,e
+	cp		$40
+	jp		nz,to_case
+	xor		a
+	ld		d,a
+	ld		e,a
+	jp		end
+
+to_case:
+	ld		a,$40
+	ld		e,a
+	jp		end
+
+up:
+	ld		a,d
+	or		$00
+	jp		nz,up_2
+	ld		a,e
+	cp		$11
+	jp		c,special_up
+up_2:
+	sub16ir	de,$40
+	jp		end
+special_up:
+	ld		de,$0140
+	jp		end
+
+sx:
+	ld		a,d
+	cp		$01
+	jp		z,sx_2
+	ld		a,e
+	and		$1F
+	jp		z,special_sx
+	sub16ir	de,$02
+	jp		end
+special_sx:
+	add16ir	de,$10
+	jp		end
+sx_2:
+	ld		a,e
+	cp		$40
+	jp		nz,end
+	jp		to_case
+
+dx:
+	ld		a,d
+	cp		$01
+	jp		z,dx_2
+	ld		a,e
+	and		$1F
+	cp		$10
+	jp		z,special_dx
+	add16ir	de,$02
+	jp		end
+special_dx:
+	sub16ir	de,$10
+	jp		end
+
+dx_2:
+	ld		a,e
+	cp		$40
+	jp		nz,end
+	jp		to_case
+
+end:
+	add16ir de,$9CA1
+	ld		a,d
+	ld		[rSELPOS2],a
+	ld		a,e
+	ld		[rSELPOS1],a
+	call	WAIT_VBLANK
+	call	move_arrow
+	jp		NAME_LOOP
+
+
+rem_arrow:
+	xor		a
+	ld		[de],a
+	ret
+
+move_arrow:
+	ld		a,$DA
+	ld		[de],a
+	ret
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	call	WAIT_VBLANK
+	ld		hl,STRINGS
+	call	print_fst_line
+
+	call	WAIT_VBLANK
+	ld		hl,STRINGS+$11
+	call	print_snd_line
+	call	WAIT_VBLANK
+	call	print_arrow
+
+
+HALT_PLS_2:
+	ld		a,%00010000				;
+	ldh		[rIE], a				; Joypad interrupt only
+	ld		a,$E0					;
+	ldh		[rIF], a				; disable all IF
+	ei
+	halt
+	nop
+	ld		a,[rINPUTS]
+	and		$10
+	jr		z,HALT_PLS_2
+
+	call	WAIT_VBLANK
+	call	rem_text
+
+	call	WAIT_VBLANK
 	ld		hl,STRINGS+$22
 	call	print_fst_line
 
 	call	WAIT_VBLANK
 	ld		hl,STRINGS+$33
 	call	print_snd_line
-	call	WAIT_VBLANK
 
 hang:
 	xor		a						;
@@ -396,13 +581,13 @@ DRAW::
 	ret
 
 
-;*******************************************************************************************
+;******************************************************************************
 ; Joypad interrupt handler
 BTNS::
 	push	af
 	push	bc
 
-	ld		a,$20					;
+	ld		a,$2F					;
 	ld		[rP1],a					; Set 0 at the output line P14 (Up/Down/Left/Right)
 	ld		a,[rP1]
 	ld		a,[rP1]
@@ -412,7 +597,7 @@ BTNS::
 	swap	a
 	ld		b,a
 
-	ld		a,$10
+	ld		a,$1F
 	ld		[rP1],a
 	ld		a,[rP1]
 	ld		a,[rP1]

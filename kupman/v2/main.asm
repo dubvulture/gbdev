@@ -1,15 +1,12 @@
-;******************************************************************************
-; A BUNCH OF SHIT
-
     INCLUDE     "includes/Hardware.inc"
     INCLUDE     "includes/Addsub1.inc"
     INCLUDE     "includes/SHIFT.INC"
     INCLUDE     "includes/LOAD1.INC"
-    INCLUDE     "shit01_includes/shit01_costants.asm"
-    INCLUDE     "shit01_includes/shit01_data.asm"
-    INCLUDE     "shit01_includes/shit01_move_01.asm"
-    INCLUDE     "shit01_includes/shit01_move_02.asm"
-    INCLUDE     "shit01_includes/shit01_AI.asm"
+    INCLUDE     "kupman/v2/costants.asm"
+    INCLUDE     "kupman/v2/data.asm"
+    INCLUDE     "kupman/v2/move_01.asm"
+    INCLUDE     "kupman/v2/move_02.asm"
+    INCLUDE     "kupman/v2/AI.asm"
 
 
     SECTION     "V-Blank IRQ Vector",HOME[$40]
@@ -59,11 +56,11 @@ VBL_VECT:
 
     SECTION     "Program Start",HOME[$0150]
 START::
-    di                      ; disable interrupts
+    di                     ; disable interrupts
     ld      sp,$FFFE                ; set the stack to $FFFE
 
     call    WAITERINO
-    call    WAITERINO               ; I want to see nintendo's logo :))))))
+    call    WAITERINO               ; I want to see nintendo's logo
     call    WAITERINO
 
     call    WAIT_VBLANK
@@ -264,4 +261,4 @@ EXIT:
 
 
 
-    INCLUDE "shit01_includes/shit01_utility.asm"
+    INCLUDE "kupman/v2/utilities.asm"

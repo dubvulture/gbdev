@@ -1,10 +1,5 @@
-;************************************************************************
-;* Includes																*	
-;************************************************************************
-
 	INCLUDE	"includes/Hardware.inc"
 
-; We define constants to work with our sprites
 _SPR0_Y     EQU     _OAMRAM			; sprite Y 0 is the beginning of the sprite mem
 _SPR0_X     EQU     _OAMRAM+1
 _SPR0_NUM   EQU     _OAMRAM+2
@@ -28,9 +23,6 @@ _SPR3_ATT   EQU     _OAMRAM+15
 _MAP_VRAM   EQU     _VRAM+$1000
 
 
-;************************************************************************
-;* Cartridge Header														*	
-;************************************************************************
 	SECTION	"Org $00",HOME[$00]
 RST_00:	
 	jp	$100
@@ -63,9 +55,7 @@ RST_30:
 RST_38:
 	jp	$100
 
-;************************************************************************
-;* Writes in VRAM when VBlank occurs									*
-;************************************************************************
+
 	SECTION	"V-Blank IRQ Vector",HOME[$40]
 VBL_VECT:
 	jp DRAW
@@ -90,6 +80,7 @@ JOYPAD_VECT:
 	nop
 	jp START
 
+
 ; $0104-$0133 (Nintendo logo)
 	DB	$CE,$ED,$66,$66,$CC,$0D,$00,$0B,$03,$73,$00,$83,$00,$0C,$00,$0D
 	DB	$00,$08,$11,$1F,$88,$89,$00,$0E,$DC,$CC,$6E,$E6,$DD,$DD,$D9,$99
@@ -97,50 +88,36 @@ JOYPAD_VECT:
 
 ; $0134-$013E (Game title 11 upper case ASCII characters; pad with $00)
 	DB	"MOVING_1",0,0,0
-
 ; $013F-$0142 (Product code assigned by Nintendo)
-	DB	"    "		;0123
-
+	DB	"    "		; 0123
 ; $0143 (Color GameBoy compatibility code)
 	DB	$00			; $00 - DMG 
-
 ; $0144 (High-nibble of license code - normally $00 if $014B != $33)
 	DB	$00
-
 ; $0145 (Low-nibble of license code - normally $00 if $014B != $33)
 	DB	$00
-
 ; $0146 (GameBoy/Super GameBoy indicator)
 	DB	$00			; $00 - GameBoy
-
 ; $0147 (Cartridge type - all Color GameBoy cartridges are at least $19)
 	DB	$00			; 0 - ROM ONLY
-
 ; $0148 (ROM size)
 	DB	$00			; 0 - 	256Kbit	=  32KByte	=   2 banks
-
 ; $0149 (RAM size)
 	DB	$00			; 0 - None
-
 ; $014A (Destination code)
 	DB	$01			; $01 - All others
-
 ; $014B (Licensee code - this _must_ be $33)
 	DB	$33			; $33 - Check $0144/$0145 for Licensee code.
-
 ; $014C (Mask ROM version - handled by RGBFIX)
 	DB	$00
-
 ; $014D (Complement check - handled by RGBFIX)
 	DB	$00
-
 ; $014E-$014F (Cartridge checksum - handled by RGBFIX)
 	DW	$00
 
 
-;************************************************************************
-;*	Program Start														*
-;************************************************************************
+;******************************************************************************
+;*	Program Start
 
 	SECTION "Program Start",HOME[$0150]
 START::
@@ -260,7 +237,7 @@ BTNS::
 	ret						; return from handler w\o enabling interrupts
 
 
-;**********************************************************************************************
+;******************************************************************************
 ; VBlank interrupt handler
 DRAW::
 	push af
@@ -358,7 +335,7 @@ redraw:
 	ret						; return from handler w\o enabling interrupts
 
 
-;************************************************************************************
+;******************************************************************************
 ;* SUBROUTINES
 
 LOAD_TILES::
@@ -436,7 +413,7 @@ LOAD_SPRITES_LOOP::
 	pop	af
 	ret
 
-;********************************************************************
+;******************************************************************************
 
  SECTION "Sprites",HOME[$1000]
 

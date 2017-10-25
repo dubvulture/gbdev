@@ -1,5 +1,3 @@
-;********************************************************************
-
 SECTION     "MyCode",HOME[$0700]
 ; Loop for counter =< 1byte - self-copying at first run
 SELF_COPY::

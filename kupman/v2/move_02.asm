@@ -1,4 +1,5 @@
-; Compute position in tiles coordinates (ONLY IF X MOD 8 = 0 = Y MOD 8) / otherwise set transition state
+; Compute position in tiles coordinates (ONLY IF X MOD 8 = 0 = Y MOD 8)
+; otherwise set transition state
 compute_2::
 
     push    bc
