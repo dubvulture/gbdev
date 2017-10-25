@@ -1,0 +1,106 @@
+
+rINPUTS			registered input
+rSELPOS2		Y coord of cursor
+rSELPOS1		X coord of cursor
+LOAD_SHORT		position of LOAD_SHORT subroutine
+LOAD_LONG		position of LOAD_LONG subroutine
+
+-- LOAD_SHORT parameters --
+mWHERE1			
+mWHERE2			
+mWHAT1			
+mWHAT2			
+mCOUNT			
+
+-- LOAD_LONG parameters --
+mWHERE1_L		
+mWHERE2_L		
+mWHAT1_L		
+mWHAT2_L		
+mCOUNT1_L	
+mCOUNT2_L		
+
+fstLINE			first line initial position to write to			
+sndLINE			second line initial position to write to
+
+
+main()
+
+	HALT_PLS:
+		wait for input after displaying first dialog
+
+	NAME_LOOP:
+		wait for input and modify cursor position accordingly
+
+	HALT_PLS_2:
+		wait for input after displaying second dialog
+
+
+Interrupts
+
+	DRAW::
+		VBLANK interrupt handler (DMA Transfer)
+
+	BTNS::
+		Joypad interrupt handler (just register to [rINPUTS])
+
+
+
+Subroutines
+
+	print_fst/snd_line:
+		load fst/snd line in $de and call print_line
+
+	print_line:
+		print string addressed by [hl]
+
+	print_arrow:
+		print arrow for next dialog
+
+	rem_text:
+		remove text from dialog
+
+	WAITERINO:
+		waste time :)
+
+	WAIT_HBLANK:
+		wait horizontal blank
+
+
+Loading subroutines
+
+	LOAD_START:
+		load START_MAP to _SCRN1
+
+	LOAD_NAME_SELECTION:
+		load NAME_SELECTION_MAP to _SCRN1
+
+	LOAD_BOX_WINDOW:
+		load dialog box (BOX_MAP) to _SCRN0 (used for windows)
+
+	LOAD_BOX_TILES:
+		load BOX_TILES to [0x8830]
+
+	LOAD_CHAR_TILES:
+		load CHAR_TILES to [0x88A0]
+
+	LOAD_REMAINING:
+		load remanining START_TILES to [0x8800] (wrapped around)
+
+
+Fixed Subroutines
+
+	SELF_COPY:
+		self copying loop that will be used as LOAD_SHORT
+
+	LONG_COPY:
+		LOAD_LONG already setup to write START_TILES to _MAP_VRAM
+
+	WAIT_VBLANK:
+		wait vertical blank
+
+	DELAY5:
+		call 5 times WAIT_VBLANK to put a little DELAY5
+
+	DMADATA:
+		DMA Transfer routine to copy to high ram
