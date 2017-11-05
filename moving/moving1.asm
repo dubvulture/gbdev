@@ -26,31 +26,24 @@ _MAP_VRAM   EQU     _VRAM+$1000
 	SECTION	"Org $00",HOME[$00]
 RST_00:	
 	jp	$100
-
 	SECTION	"Org $08",HOME[$08]
 RST_08:	
 	jp	$100
-
 	SECTION	"Org $10",HOME[$10]
 RST_10:
 	jp	$100
-
 	SECTION	"Org $18",HOME[$18]
 RST_18:
 	jp	$100
-
 	SECTION	"Org $20",HOME[$20]
 RST_20:
 	jp	$100
-
 	SECTION	"Org $28",HOME[$28]
 RST_28:
 	jp	$100
-
 	SECTION	"Org $30",HOME[$30]
 RST_30:
 	jp	$100
-
 	SECTION	"Org $38",HOME[$38]
 RST_38:
 	jp	$100
@@ -199,7 +192,7 @@ wait:
 	or	c					; if B or C != 0         			; 1 cycle
 	jr  nz,wait  			; 4 cycles
 	nop
-	jp	CICLO
+	jr	CICLO
 	nop
 
 

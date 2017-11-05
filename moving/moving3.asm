@@ -8,31 +8,24 @@ _MAP_VRAM   EQU     _VRAM+$1000
 	SECTION	"Org $00",HOME[$00]
 RST_00:	
 	jp	$100
-
 	SECTION	"Org $08",HOME[$08]
 RST_08:	
 	jp	$100
-
 	SECTION	"Org $10",HOME[$10]
 RST_10:
 	jp	$100
-
 	SECTION	"Org $18",HOME[$18]
 RST_18:
 	jp	$100
-
 	SECTION	"Org $20",HOME[$20]
 RST_20:
 	jp	$100
-
 	SECTION	"Org $28",HOME[$28]
 RST_28:
 	jp	$100
-
 	SECTION	"Org $30",HOME[$30]
 RST_30:
 	jp	$100
-
 	SECTION	"Org $38",HOME[$38]
 RST_38:
 	jp	$100
@@ -158,7 +151,7 @@ wait2:
 	or	c					; if B or C != 0         			; 1 cycle
 	jr  nz,wait2  			; 4 cycles
 	
-	jp	CICLO
+	jr	CICLO
 	nop
 
 
@@ -216,10 +209,15 @@ DRAW::
 	ld	a,b
 
 	cp	$08
-	jp	z,down
+	jr	z,down
 	cp	$04
-	jp	z,up
-	jp	sxdx
+	jr	z,up
+	cp	$02
+	jr	z,sx
+	cp	$01
+	jr	z,dx
+	jr	redraw
+
 
 up:										; Attributes don't matter here
 	ld	a,[_CHAR_POS]
@@ -230,7 +228,7 @@ up:										; Attributes don't matter here
 	ld	l,a
 up2:
 	call UP_MOVE
-	jp redraw
+	jr redraw
 down:
 	ld	a,[_CHAR_POS]
 	and $CC
@@ -240,15 +238,7 @@ down:
 	ld	l,a
 down2:	
 	call DOWN_MOVE
-	jp redraw
-
-sxdx:
-	cp	$02
-	jp	z,sx
-	cp	$01
-	jp	z,dx
-	jp	redraw
-
+	jr redraw
 sx:
 	ld	a,[_CHAR_POS]
 	and $F8
@@ -258,7 +248,7 @@ sx:
 	ld	h,a
 sx2:
 	call SX_MOVE
-	jp	redraw
+	jr	redraw
 dx:
 	ld	a,[_CHAR_POS]
 	and $F4

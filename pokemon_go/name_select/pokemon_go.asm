@@ -2,8 +2,10 @@
 	INCLUDE	"includes/Addsub1.inc"
 
 rINPUTS			EQU		$C000
-rSELPOS2		EQU		$C001
-rSELPOS1		EQU		$C002
+rOLD_INPUTS		EQU		$C001
+rNEW_INPUTS		EQU		$C002
+rSELPOS2		EQU		$C003
+rSELPOS1		EQU		$C004
 LOAD_SHORT		EQU		$C600
 LOAD_LONG		EQU		$C500
 mWHERE1			EQU		$C606
@@ -25,10 +27,7 @@ sndLINE			EQU		$9881
 	SECTION	"V-Blank IRQ Vector",HOME[$40]
 VBL_VECT:
 	jp		DRAW
-	SECTION	"Joypad IRQ Vector",HOME[$60]
-JOYPAD_VECT:
-	jp		BTNS
-	
+
 	SECTION	"Start",HOME[$100]
 	nop
 	jp		START
@@ -81,6 +80,8 @@ START::
 
 	xor		a
 	ld		[rINPUTS],a				; No input so far
+	ld		[rOLD_INPUTS],a
+	ld		[rNEW_INPUTS],a
 	ld		a,$9C
 	ld		[rSELPOS2],a
 	ld		a,$A1
@@ -166,12 +167,10 @@ L1:
 	call	print_arrow
 
 HALT_PLS:
-	ld		a,%00010000				;
-	ldh		[rIE], a				; Joypad interrupt only
-	ld		a,$E0					;
-	ldh		[rIF], a				; disable all IF
-	ld		a,$4F					;
-	ld		[rP1],a					; Set 0 at the output line P14
+	ld		a,%00000001					; VBlank interrupt only
+	ldh		[rIE],a
+	ld		a,$E0						;
+	ldh		[rIF],a						; disable all IF
 	ei
 	halt
 	nop
@@ -190,14 +189,8 @@ HALT_PLS:
 	ldh		[rLCDC],a
 
 NAME_LOOP:
-	ld		a,%00010000				;
-	ldh		[rIE], a				; Joypad interrupt only
-	ld		a,$2F				;
-	ld		[rP1],a				; Set 0 at the output line P15 (Up/Down/Left/Right)
-	xor		a
-	ld		[rINPUTS],a
 	ld		a,$E0					;
-	ldh		[rIF], a				; disable all IF
+	ldh		[rIF],a					; disable all IF
 	ei
 	halt
 	nop
@@ -207,46 +200,34 @@ NAME_LOOP:
 	ld		d,a
 	call	WAIT_VBLANK
 	call	rem_arrow
-	sub16ir	de,$00A1
-	ld		a,d
-	sub		$9C
-	ld		d,a
-	ld		a,[rINPUTS]
+	add16ir	de,$635f				;sub16ir	de,$9CA1
+	ld		a,[rNEW_INPUTS]
 ;	Start	|	Select	|	B	|	A	|	Down	|	Up	|	Sx	|	Dx	|
 	and		$0F
 	cp		$08
-	jp		z,down
+	jr		z,down
 	cp		$04
-	jp		z,up
+	jr		z,up
 	cp		$02
-	jp		z,sx
+	jr		z,sx
 	cp		$01
-	jp		z,dx
-	and		$03
-	cp		$02
-	jp		z,sx
-	jp		dx
-	ld		a,[rINPUTS]
-	and		$0C
-	cp		$08
-	jp		z,down
-	jp		up
+	jr		z,dx
+	jp		end
 
 down:
 	ld		a,d
 	or		$00
-	jp		nz,special_down
-	add16ir	de,$40
+	jr		nz,special_down
+	add16ir	de,$0040
 	jp		end
 special_down:
 	ld		a,e
 	cp		$40
-	jp		nz,to_case
+	jr		nz,to_case
 	xor		a
 	ld		d,a
 	ld		e,a
 	jp		end
-
 to_case:
 	ld		a,$40
 	ld		e,a
@@ -255,12 +236,12 @@ to_case:
 up:
 	ld		a,d
 	or		$00
-	jp		nz,up_2
+	jr		nz,up_2
 	ld		a,e
 	cp		$11
-	jp		c,special_up
+	jr		c,special_up
 up_2:
-	sub16ir	de,$40
+	sub16ir	de,$0040
 	jp		end
 special_up:
 	ld		de,$0140
@@ -269,40 +250,46 @@ special_up:
 sx:
 	ld		a,d
 	cp		$01
-	jp		z,sx_2
+	jr		nz,sx_check_wrap
+	ld		a,e					; Check lowest row
+	cp		$40
+	jp		z,end
+sx_check_wrap:
 	ld		a,e
 	and		$1F
-	jp		z,special_sx
+	jr		z,sx_wrap
 	sub16ir	de,$02
 	jp		end
-special_sx:
-	add16ir	de,$10
-	jp		end
-sx_2:
+sx_wrap:
 	ld		a,e
-	cp		$40
-	jp		nz,end
-	jp		to_case
+	add		$10
+	ld		e,a
+	jp		end
 
 dx:
 	ld		a,d
 	cp		$01
-	jp		z,dx_2
+	jr		nz,dx_check_wrap
+	ld		a,e					; Check lowest row
+	cp		$40
+	jp		z,end
+dx_check_wrap:
 	ld		a,e
-	and		$1F
+	and		$0F
+	ld		b,a
+	ld		a,e
+	and		$10
+	or		b
 	cp		$10
-	jp		z,special_dx
+	jr		z,dx_wrap
 	add16ir	de,$02
 	jp		end
-special_dx:
-	sub16ir	de,$10
+dx_wrap:
+	ld		a,e
+	sub		$10
+	ld		e,a
 	jp		end
 
-dx_2:
-	ld		a,e
-	cp		$40
-	jp		nz,end
-	jp		to_case
 
 end:
 	add16ir de,$9CA1
@@ -328,81 +315,16 @@ move_arrow:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	call	WAIT_VBLANK
-	ld		hl,STRINGS
-	call	print_fst_line
-
-	call	WAIT_VBLANK
-	ld		hl,STRINGS+$11
-	call	print_snd_line
-	call	WAIT_VBLANK
-	call	print_arrow
-
-
-HALT_PLS_2:
-	ld		a,%00010000				;
-	ldh		[rIE], a				; Joypad interrupt only
-	ld		a,$E0					;
-	ldh		[rIF], a				; disable all IF
-	ei
-	halt
-	nop
-	ld		a,[rINPUTS]
-	and		$10
-	jr		z,HALT_PLS_2
-
-	call	WAIT_VBLANK
-	call	rem_text
-
-	call	WAIT_VBLANK
-	ld		hl,STRINGS+$22
-	call	print_fst_line
-
-	call	WAIT_VBLANK
-	ld		hl,STRINGS+$33
-	call	print_snd_line
-
-hang:
-	xor		a						;
-	ldh		[rIE], a				; no interrupts
-	ld		a,$E0					;
-	ldh		[rIF], a				; disable all IF
-	ei
-	halt
-	nop
-
-
-
 ;******************************************************
 ;* SUBROUTINES
 
-
-
 print_fst_line::
 	ld		de,fstLINE
-	jp		print_line
+	jr		print_line
 
 print_snd_line::
 	ld		de,sndLINE
-	jp		print_line
+	jr		print_line
 
 
 print_line::
@@ -415,7 +337,6 @@ print_line_loop:
 	dec		b
 	jr		nz,print_line_loop
 	ret
-
 
 print_arrow::
 	ld		de,$9892 ;arrow position
@@ -461,7 +382,7 @@ wait:
 WAIT_HBLANK::
 	ld		a,[rSTAT]
 	cp		$80
-	jp		nz,WAIT_HBLANK
+	jr		nz,WAIT_HBLANK
 	ret
 
 
@@ -572,12 +493,11 @@ LOAD_REMAINING::
 
 
 
-
-
 ;******************************************************
 ; VBlank interrupt handler
 DRAW::
 	call	$FF80				; OAM DMA TRANSFER
+	call	BTNS
 	ret
 
 
@@ -587,17 +507,20 @@ BTNS::
 	push	af
 	push	bc
 
-	ld		a,$2F					;
+	ld		a,[rINPUTS]
+	ld		c,a						; save for later
+	ld		[rOLD_INPUTS],a
+	ld		a,$20					;
 	ld		[rP1],a					; Set 0 at the output line P14 (Up/Down/Left/Right)
 	ld		a,[rP1]
 	ld		a,[rP1]
-	
+
 	cpl
 	and		$0F
 	swap	a
 	ld		b,a
 
-	ld		a,$1F
+	ld		a,$10
 	ld		[rP1],a
 	ld		a,[rP1]
 	ld		a,[rP1]
@@ -610,12 +533,14 @@ BTNS::
 	and		$0F
 	or		b
 	swap	a
-	jp		nz,store
-	ld		a,[rINPUTS]
-store:
 	ld		[rINPUTS],a
+	ld		b,a
+	ld		a,c
+	xor		$FF					; (OLD xor 0xFF
+	and		b					; (     ""     ) and CURR
+	ld		[rNEW_INPUTS],a		; = NEW
 
-	ld		a,$30
+	ld		a,$3F
 	ld		[rP1],a
 
 	pop		bc

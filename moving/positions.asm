@@ -25,6 +25,8 @@ _CHAR_POS	EQU		_RAM
 
 SECTION "Positions",HOME[$500]
 
+;;; All values are explicitly loaded and stored for clarity
+
 
 MAIN_CHAR::
 	ld	a,$40
@@ -348,7 +350,6 @@ DX_MOVE::
 	ret
 
 
-; Hello darkness my old friend, I've come to talk to you again
 WAIT_VBLANK::
 	ldh	a,[rLY]				; get current scanline
 	cp	$91					; Are we in v-blank yet?

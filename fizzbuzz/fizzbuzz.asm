@@ -12,10 +12,10 @@ rPOSITION2	EQU		_RAM+$05
 
 	SECTION	"V-Blank IRQ Vector",HOME[$40]
 VBL_VECT:
-	jp DRAW
+	jp		DRAW
 	SECTION	"Joypad IRQ Vector",HOME[$60]
 JOYPAD_VECT:
-	jp BTNS
+	jp		BTNS
 
 	
 	SECTION	"Start",HOME[$100]
@@ -215,7 +215,6 @@ LOAD_TILES_LOOP::
 	ret
 
 
-
 _print_fizz:
 	push	hl
 
@@ -243,7 +242,6 @@ _print_fizz:
 
 	pop		hl
 	ret
-
 
 
 _print_buzz:
@@ -363,7 +361,6 @@ _end_sub_loop:						; b = tens
 
 
 
-
 ;;; INTERRUPT HANDLER ROUTINES
 
 
@@ -382,7 +379,7 @@ BTNS:
 	ld		b,a
 	jr		z,no_btns
 
-	ld		a,$3F				;
+	ld		a,$30				;
 	ld		[rP1],a				; Set 1s at both P14 and P15 lines (off)
 
 
